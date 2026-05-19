@@ -1,0 +1,11 @@
+<%- if @total && @total > 0 %>
+  <div class="paging">
+    <%- if @page > 0 %>
+      <a href="?page=<%= @page %>&per_page=<%= @per_page %>">&laquo; <%= action.t(:prev_page) %></a>
+    <%- end %>
+    <span><%= action.t(:page_of, page: @page + 1, total: [(@total.to_f / @per_page).ceil, 1].max) %></span>
+    <%- if (@page + 1) * @per_page < @total %>
+      <a href="?page=<%= @page + 2 %>&per_page=<%= @per_page %>"><%= action.t(:next_page) %> &raquo;</a>
+    <%- end %>
+  </div>
+<%- end %>

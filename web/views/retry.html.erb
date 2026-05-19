@@ -1,0 +1,33 @@
+<% @page_title = "Retry: #{action.job_display_class(@job)}" %>
+<% @breadcrumb = [{label: "Retries", href: "#{action.root_path}retries"}, {label: action.job_display_class(@job)}] %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Lifecycle</span></div>
+    <h1><span class="queue-name"><%= action.h(action.job_display_class(@job)) %></span></h1>
+  </div>
+  <div class="page-head-meta">
+    <form method="post" action="<%= action.root_path %>retries" style="display:inline-flex; gap:8px;">
+      <input type="hidden" name="key[]" value="<%= action.h(@job.jid) %>">
+      <button type="submit" name="action" value="retry" class="btn ghost">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <%= action.t(:retry_now) %>
+      </button>
+      <button type="submit" name="action" value="kill" class="btn ghost"><%= action.t(:kill) %></button>
+      <button type="submit" name="action" value="delete" class="btn danger">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        <%= action.t(:delete) %>
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title">Job Details</div>
+  </div>
+  <div style="padding: 20px 16px;">
+    <%- job = @job %>
+    <%= action.render_partial(:job_info) %>
+  </div>
+</div>

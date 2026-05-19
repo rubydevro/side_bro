@@ -1,0 +1,104 @@
+<% @page_title = "Busy" %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Workers</span></div>
+    <h1><%= action.t(:busy) %></h1>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title"><%= action.t(:processes) %></div>
+    <div class="ph-meta mono"><%= @processes.size %> processes</div>
+    <div class="ph-spacer"></div>
+    <%- unless @processes.empty? %>
+      <form method="post" action="<%= action.root_path %>busy" style="display:inline; display:flex; gap:8px;">
+        <button type="submit" name="quiet" value="1" class="btn ghost"><%= action.t(:quiet_all) %></button>
+        <button type="submit" name="stop" value="1" class="btn danger"><%= action.t(:stop_all) %></button>
+      </form>
+    <%- end %>
+  </div>
+  <%- if @processes.empty? %>
+    <div class="empty"><%= action.t(:no_processes) %></div>
+  <%- else %>
+    <table>
+      <thead>
+        <tr>
+          <th><%= action.t(:hostname) %></th>
+          <th><%= action.t(:tags) %></th>
+          <th><%= action.t(:queues) %></th>
+          <th><%= action.t(:version) %></th>
+          <th><%= action.t(:started_at) %></th>
+          <th><%= action.t(:rss) %></th>
+          <th><%= action.t(:concurrency) %></th>
+          <th><%= action.t(:busy) %></th>
+          <th class="col-actions"><%= action.t(:actions) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%- @processes.each do |process| %>
+          <tr>
+            <td><span class="mono" style="font-size:12px"><%= action.h(process["hostname"]) %>:<%= action.h(process["pid"].to_s) %></span></td>
+            <td><%= action.h(Array(process["labels"]).join(", ")) %></td>
+            <td><%= action.h(Array(process["queues"]).join(", ")) %></td>
+            <td><span class="mono" style="font-size:12px"><%= action.h(process["version"]) %></span></td>
+            <td><span class="mono" style="font-size:12px"><%= process["started_at"] ? Time.at(process["started_at"]).utc.strftime("%Y-%m-%d %H:%M") : "—" %></span></td>
+            <td><%= action.format_memory(process["rss"]) %></td>
+            <td><%= process["concurrency"] %></td>
+            <td><span style="color:var(--cyan)"><%= process["busy"] %></span> / <%= process["concurrency"] %></td>
+            <td class="col-actions">
+              <form method="post" action="<%= action.root_path %>busy" style="display:inline-flex; gap:4px;">
+                <input type="hidden" name="identity" value="<%= action.h(process.identity) %>">
+                <button type="submit" name="quiet_process" value="1" class="iconlink" title="<%= action.t(:quiet) %>">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23M12 20l-3.3.3M12 20l3.3.3M12 20v4"/></svg>
+                </button>
+                <button type="submit" name="stop_process" value="1" class="iconlink danger" title="<%= action.t(:stop) %>">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <%- end %>
+      </tbody>
+    </table>
+  <%- end %>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title"><%= action.t(:jobs) %></div>
+    <div class="ph-meta mono"><%= @workers.size %> running</div>
+  </div>
+  <%- if @workers.empty? %>
+    <div class="empty"><%= action.t(:no_jobs) %></div>
+  <%- else %>
+    <table>
+      <thead>
+        <tr>
+          <th><%= action.t(:hostname) %></th>
+          <th><%= action.t(:thread) %></th>
+          <th><%= action.t(:jid) %></th>
+          <th><%= action.t(:queue) %></th>
+          <th><%= action.t(:class) %></th>
+          <th><%= action.t(:args) %></th>
+          <th><%= action.t(:run_at) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%- @workers.each do |process, thread, work| %>
+          <%- job = work.is_a?(Hash) ? work : (work.respond_to?(:job) ? work.job : work) %>
+          <tr>
+            <td><span class="mono" style="font-size:12px"><%= action.h(process.to_s) %></span></td>
+            <td><span class="mono" style="font-size:12px"><%= action.h(thread.to_s) %></span></td>
+            <td><span class="mono" style="font-size:12px; color:var(--violet-200)"><%= action.h(job["jid"].to_s) %></span></td>
+            <td><%= action.h(job["queue"].to_s) %></td>
+            <td><span class="job-name"><%= action.h(action.job_display_class(job)) %></span></td>
+            <td><code class="args"><%= action.h(action.display_args(job)) %></code></td>
+            <td><span class="mono" style="font-size:12px"><%= job["run_at"] ? action.relative_time(Time.at(job["run_at"].to_f)) : "—" %></span></td>
+          </tr>
+        <%- end %>
+      </tbody>
+    </table>
+  <%- end %>
+</div>

@@ -1,0 +1,32 @@
+<% @page_title = "Scheduled: #{action.job_display_class(@job)}" %>
+<% @breadcrumb = [{label: "Scheduled", href: "#{action.root_path}scheduled"}, {label: action.job_display_class(@job)}] %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Lifecycle</span></div>
+    <h1><span class="queue-name"><%= action.h(action.job_display_class(@job)) %></span></h1>
+  </div>
+  <div class="page-head-meta">
+    <form method="post" action="<%= action.root_path %>scheduled" style="display:inline-flex; gap:8px;">
+      <input type="hidden" name="key[]" value="<%= action.h(@job.jid) %>">
+      <button type="submit" name="action" value="add_to_queue" class="btn ghost"><%= action.t(:add_to_queue) %></button>
+      <button type="submit" name="action" value="delete" class="btn danger">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        <%= action.t(:delete) %>
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title">Job Details</div>
+    <%- if @job.at %>
+      <div class="ph-meta">Scheduled for <%= @job.at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %></div>
+    <%- end %>
+  </div>
+  <div style="padding: 20px 16px;">
+    <%- job = @job %>
+    <%= action.render_partial(:job_info) %>
+  </div>
+</div>

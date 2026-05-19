@@ -1,0 +1,76 @@
+<%
+  begin
+    _stats = Sidekiq::Stats.new
+    _busy = _stats.workers_size
+    _queues_count = Sidekiq::Queue.all.size
+    _retries = _stats.retry_size
+    _scheduled = _stats.scheduled_size
+    _dead = _stats.dead_size
+  rescue
+    _busy = _queues_count = _retries = _scheduled = _dead = 0
+  end
+%>
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div>
+      <div class="brand-name">Side<span>Bro</span></div>
+    </div>
+    <div class="brand-pill">live</div>
+  </div>
+
+  <div class="nav-label">Overview</div>
+  <nav class="nav">
+    <a href="<%= action.root_path %>" class="<%= action.current_path?('') ? 'active' : '' %>">
+      <span class="dot"></span> Dashboard <span class="count">—</span>
+    </a>
+  </nav>
+
+  <div class="nav-label">Workers</div>
+  <nav class="nav">
+    <a href="<%= action.root_path %>busy" class="<%= action.current_path?('busy') ? 'active' : '' %>">
+      <span class="dot"></span> Busy <span class="count"><%= _busy %></span>
+    </a>
+    <a href="<%= action.root_path %>queues" class="<%= action.request.path.include?('/queues') ? 'active' : '' %>">
+      <span class="dot"></span> Queues <span class="count"><%= _queues_count %></span>
+    </a>
+  </nav>
+
+  <div class="nav-label">Lifecycle</div>
+  <nav class="nav">
+    <a href="<%= action.root_path %>retries" class="<%= action.request.path.include?('/retries') ? 'active' : '' %>">
+      <span class="dot"></span> Retries <span class="count"><%= _retries %></span>
+    </a>
+    <a href="<%= action.root_path %>scheduled" class="<%= action.request.path.include?('/scheduled') ? 'active' : '' %>">
+      <span class="dot"></span> Scheduled <span class="count"><%= _scheduled %></span>
+    </a>
+    <a href="<%= action.root_path %>morgue" class="<%= action.request.path.include?('/morgue') ? 'active' : '' %>">
+      <span class="dot"></span> Dead <span class="count"><%= _dead %></span>
+    </a>
+  </nav>
+
+  <div class="nav-label">Monitoring</div>
+  <nav class="nav">
+    <a href="<%= action.root_path %>metrics" class="<%= action.current_path?('metrics') ? 'active' : '' %>">
+      <span class="dot"></span> Metrics <span class="count">—</span>
+    </a>
+  </nav>
+
+  <%- SideBro::Web.extensions.each do |ext| %>
+    <%- next unless ext[:tab] %>
+    <div class="nav-label"><%= action.h(ext[:tab]) %></div>
+    <nav class="nav">
+      <a href="<%= action.root_path %><%= action.h(ext[:name]) %>">
+        <span class="dot"></span> <%= action.h(ext[:tab]) %>
+      </a>
+    </nav>
+  <%- end %>
+
+  <div class="sidebar-footer">
+    <div class="avatar">SB</div>
+    <div class="who">
+      sidebro · v<%= SideBro::VERSION %>
+      <small>sidekiq <%= Sidekiq::VERSION %></small>
+    </div>
+  </div>
+</aside>

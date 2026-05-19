@@ -1,0 +1,44 @@
+<%
+  begin
+    _s = Sidekiq::Stats.new
+  rescue
+    _s = nil
+  end
+%>
+<div class="stat-strip">
+  <div class="stat" data-tone="processed">
+    <div class="stat-label">Processed</div>
+    <div class="stat-value"><%= action.number_with_delimiter(_s&.processed || 0) %></div>
+    <div class="stat-delta">total</div>
+  </div>
+  <div class="stat" data-tone="failed">
+    <div class="stat-label"><span class="dot-mini" style="background:var(--red);box-shadow:0 0 6px var(--red)"></span> Failed</div>
+    <div class="stat-value"><%= action.number_with_delimiter(_s&.failed || 0) %></div>
+    <div class="stat-delta"><%= _s && _s.processed > 0 ? "%.2f%% rate" % (_s.failed.to_f / _s.processed * 100) : "—" %></div>
+  </div>
+  <a class="stat" data-tone="busy" href="<%= action.root_path %>busy">
+    <div class="stat-label"><span class="dot-mini" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan)"></span> Busy</div>
+    <div class="stat-value"><%= _s&.workers_size || 0 %></div>
+    <div class="stat-delta">workers</div>
+  </a>
+  <a class="stat" data-tone="enqueued" href="<%= action.root_path %>queues">
+    <div class="stat-label"><span class="dot-mini" style="background:var(--violet-300)"></span> Enqueued</div>
+    <div class="stat-value"><%= action.number_with_delimiter(_s&.enqueued || 0) %></div>
+    <div class="stat-delta">pending</div>
+  </a>
+  <a class="stat" data-tone="retries" href="<%= action.root_path %>retries">
+    <div class="stat-label"><span class="dot-mini" style="background:var(--amber)"></span> Retries</div>
+    <div class="stat-value"><%= _s&.retry_size || 0 %></div>
+    <div class="stat-delta">scheduled</div>
+  </a>
+  <a class="stat" data-tone="scheduled" href="<%= action.root_path %>scheduled">
+    <div class="stat-label">Scheduled</div>
+    <div class="stat-value"><%= _s&.scheduled_size || 0 %></div>
+    <div class="stat-delta">upcoming</div>
+  </a>
+  <div class="stat" data-tone="dead">
+    <div class="stat-label">Dead</div>
+    <div class="stat-value"><%= _s&.dead_size || 0 %></div>
+    <div class="stat-delta">morgue</div>
+  </div>
+</div>

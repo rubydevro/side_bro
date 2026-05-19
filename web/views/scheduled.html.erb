@@ -1,0 +1,77 @@
+<% @page_title = "Scheduled" %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Lifecycle</span></div>
+    <h1>Scheduled <span class="badge-num"><%= @total %></span></h1>
+  </div>
+</div>
+
+<%- if @jobs.empty? %>
+  <div class="panel">
+    <div class="empty"><%= action.t(:no_scheduled) %></div>
+  </div>
+<%- else %>
+  <form method="post" action="<%= action.root_path %>scheduled">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="ph-title">Scheduled Jobs</div>
+        <div class="ph-meta mono"><%= @total %> jobs</div>
+        <div class="ph-spacer"></div>
+        <div class="bulk-bar">
+          <button type="submit" name="action" value="add_to_queue" class="btn ghost"><%= action.t(:add_to_queue) %></button>
+          <button type="submit" name="action" value="delete" class="btn danger">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            <%= action.t(:delete) %>
+          </button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-select"><input type="checkbox" class="check" id="select-all"></th>
+            <th><%= action.t(:scheduled_at) %></th>
+            <th><%= action.t(:queue) %></th>
+            <th><%= action.t(:class) %></th>
+            <th><%= action.t(:args) %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <%- @jobs.each do |job| %>
+            <tr>
+              <td class="col-select"><input type="checkbox" class="check" name="key[]" value="<%= action.h(job.jid) %>"></td>
+              <td title="<%= job.at ? job.at.utc.strftime('%Y-%m-%d %H:%M:%S UTC') : '' %>">
+                <span class="mono" style="font-size:12px"><%= job.at ? action.relative_time(job.at) : "—" %></span>
+              </td>
+              <td><%= action.h(job["queue"]) %></td>
+              <td><a href="<%= action.root_path %>scheduled/<%= action.h(job.jid) %>"><span class="job-name"><%= action.h(action.job_display_class(job)) %></span></a></td>
+              <td><code class="args"><%= action.h(action.truncate(action.display_args(job), 100)) %></code></td>
+            </tr>
+          <%- end %>
+        </tbody>
+      </table>
+      <div class="panel-foot">
+        <%= action.render_partial(:paging) %>
+      </div>
+    </div>
+  </form>
+
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+    <form method="post" action="<%= action.root_path %>scheduled/all/add_to_queue" style="display:inline">
+      <button type="submit" class="btn ghost"><%= action.t(:add_all_to_queue) %></button>
+    </form>
+    <form method="post" action="<%= action.root_path %>scheduled/all/delete" style="display:inline">
+      <button type="submit" class="btn danger"><%= action.t(:delete_all) %></button>
+    </form>
+  </div>
+<%- end %>
+
+<script nonce="<%= nonce %>">
+(function () {
+  var all = document.getElementById("select-all");
+  if (!all) return;
+  all.addEventListener("change", function () {
+    document.querySelectorAll("input.check[name='key[]']").forEach(function (c) { c.checked = all.checked; });
+  });
+})();
+</script>

@@ -1,0 +1,57 @@
+<% @page_title = "Queues" %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Workers</span></div>
+    <h1>Queues <span class="badge-num"><%= @queues.size %></span></h1>
+  </div>
+</div>
+
+<%- if @queues.empty? %>
+  <div class="panel">
+    <div class="empty"><%= action.t(:no_jobs) %></div>
+  </div>
+<%- else %>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="ph-title">All Queues</div>
+      <div class="ph-meta mono"><%= @queues.size %> queues</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th><%= action.t(:queue_name) %></th>
+          <th><%= action.t(:size) %></th>
+          <th><%= action.t(:latency) %></th>
+          <th class="col-actions"><%= action.t(:actions) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%- @queues.each do |queue| %>
+          <tr>
+            <td><a href="<%= action.root_path %>queues/<%= action.h(queue.name) %>"><span class="job-name"><%= action.h(queue.name) %></span></a></td>
+            <td><span class="mono" style="color:var(--cyan)"><%= queue.size %></span></td>
+            <td><span class="mono" style="font-size:12px"><%= "%.2f" % queue.latency %>s</span></td>
+            <td class="col-actions">
+              <form method="post" action="<%= action.root_path %>queues/<%= action.h(queue.name) %>" style="display:inline-flex; gap:4px;">
+                <%- if queue.respond_to?(:paused?) && queue.paused? %>
+                  <button type="submit" name="unpause" value="1" class="iconlink" title="<%= action.t(:unpause) %>">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                <%- elsif queue.respond_to?(:pause!) %>
+                  <button type="submit" name="pause" value="1" class="iconlink" title="<%= action.t(:pause) %>">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                  </button>
+                <%- end %>
+                <button type="submit" name="clear" value="1" class="iconlink danger" title="<%= action.t(:clear) %>"
+                  onclick="return confirm('Clear all jobs from <%= action.h(queue.name) %>?')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <%- end %>
+      </tbody>
+    </table>
+  </div>
+<%- end %>

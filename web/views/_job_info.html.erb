@@ -1,0 +1,23 @@
+<table class="job-info">
+  <tr><th><%= action.t(:jid) %></th><td><%= action.h(job["jid"]) %></td></tr>
+  <tr><th><%= action.t(:class) %></th><td><%= action.h(action.job_display_class(job)) %></td></tr>
+  <tr><th><%= action.t(:queue) %></th><td><%= action.h(job["queue"]) %></td></tr>
+  <tr><th><%= action.t(:args) %></th><td><code><%= action.h(action.display_args(job)) %></code></td></tr>
+  <%- if job["enqueued_at"] %>
+  <tr><th><%= action.t(:enqueued_at) %></th><td><%= Time.at(job["enqueued_at"]).utc %></td></tr>
+  <%- end %>
+  <%- if job["error_class"] %>
+  <tr><th><%= action.t(:error) %></th><td><%= action.h("#{job["error_class"]}: #{job["error_message"]}") %></td></tr>
+  <%- end %>
+  <%- if job["error_backtrace"]&.any? %>
+  <tr>
+    <th><%= action.t(:backtrace) %></th>
+    <td>
+      <details>
+        <summary><%= action.t(:show_backtrace) %></summary>
+        <pre><%= action.h(job["error_backtrace"].first(20).join("\n")) %></pre>
+      </details>
+    </td>
+  </tr>
+  <%- end %>
+</table>

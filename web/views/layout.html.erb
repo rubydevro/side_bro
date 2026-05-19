@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="<%= action.locale %>" dir="<%= action.rtl? ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SideBro<%= @page_title ? " — #{@page_title}" : "" %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="<%= action.root_path %>assets/stylesheets/style.css" nonce="<%= nonce %>">
+</head>
+<body>
+<div class="app">
+
+  <%= action.render_partial(:nav) %>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="breadcrumb">
+        <%- if @breadcrumb && @breadcrumb.length > 1 %>
+          <%- @breadcrumb[0..-2].each do |item| %>
+            <span><%= action.h(item[:label]) %></span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+          <%- end %>
+          <b><%= action.h(@breadcrumb.last[:label]) %></b>
+        <%- elsif @breadcrumb %>
+          <b><%= action.h(@breadcrumb.last[:label]) %></b>
+        <%- else %>
+          <b><%= action.h(@page_title || "Dashboard") %></b>
+        <%- end %>
+      </div>
+      <div class="topbar-actions">
+        <button class="live-toggle" id="liveToggle">
+          <span class="pulse"></span>
+          <span>Live · <span class="mono" id="liveInterval">5s</span></span>
+        </button>
+        <button class="icon-btn" title="Refresh" onclick="window.location.reload()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <%= content %>
+
+    <%= action.render_partial(:footer) %>
+  </main>
+
+</div>
+<script src="<%= action.root_path %>assets/javascripts/application.js" nonce="<%= nonce %>"></script>
+<script nonce="<%= nonce %>">
+document.getElementById('liveToggle').addEventListener('click', function(e) {
+  e.currentTarget.classList.toggle('off');
+  var isOff = e.currentTarget.classList.contains('off');
+  e.currentTarget.querySelector('span:last-child').innerHTML = isOff ? 'Paused' : 'Live · <span class="mono" id="liveInterval">5s</span>';
+});
+</script>
+</body>
+</html>

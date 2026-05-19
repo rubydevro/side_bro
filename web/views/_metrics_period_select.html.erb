@@ -1,0 +1,5 @@
+<div class="period-select">
+  <%- %w[1h 8h 24h 72h].each do |p| %>
+    <a href="?period=<%= p %>" class="<%= @period == p ? 'active' : '' %>"><%= p %></a>
+  <%- end %>
+</div>

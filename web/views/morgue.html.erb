@@ -1,0 +1,80 @@
+<% @page_title = "Dead Jobs" %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Lifecycle</span></div>
+    <h1>Dead <span class="badge-num"><%= @total %></span></h1>
+  </div>
+</div>
+
+<%- if @jobs.empty? %>
+  <div class="panel">
+    <div class="empty"><%= action.t(:no_dead) %></div>
+  </div>
+<%- else %>
+  <form method="post" action="<%= action.root_path %>morgue">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="ph-title">Morgue</div>
+        <div class="ph-meta mono"><%= @total %> jobs</div>
+        <div class="ph-spacer"></div>
+        <div class="bulk-bar">
+          <button type="submit" name="action" value="retry" class="btn ghost">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <%= action.t(:retry_now) %>
+          </button>
+          <button type="submit" name="action" value="delete" class="btn danger">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            <%= action.t(:delete) %>
+          </button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-select"><input type="checkbox" class="check" id="select-all"></th>
+            <th><%= action.t(:last_retry) %></th>
+            <th><%= action.t(:queue) %></th>
+            <th><%= action.t(:class) %></th>
+            <th><%= action.t(:args) %></th>
+            <th><%= action.t(:error) %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <%- @jobs.each do |job| %>
+            <tr>
+              <td class="col-select"><input type="checkbox" class="check" name="key[]" value="<%= action.h(job.jid) %>"></td>
+              <td><span class="mono" style="font-size:12px"><%= job["failed_at"] ? action.relative_time(Time.at(job["failed_at"])) : "—" %></span></td>
+              <td><%= action.h(job["queue"]) %></td>
+              <td><a href="<%= action.root_path %>morgue/<%= action.h(job.jid) %>"><span class="job-name"><%= action.h(action.job_display_class(job)) %></span></a></td>
+              <td><code class="args"><%= action.h(action.truncate(action.display_args(job), 100)) %></code></td>
+              <td style="color:var(--red); font-size:12px"><%= action.h(action.truncate("#{job["error_class"]}: #{job["error_message"]}", 120)) %></td>
+            </tr>
+          <%- end %>
+        </tbody>
+      </table>
+      <div class="panel-foot">
+        <%= action.render_partial(:paging) %>
+      </div>
+    </div>
+  </form>
+
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+    <form method="post" action="<%= action.root_path %>morgue/all/retry" style="display:inline">
+      <button type="submit" class="btn ghost"><%= action.t(:retry_all) %></button>
+    </form>
+    <form method="post" action="<%= action.root_path %>morgue/all/delete" style="display:inline">
+      <button type="submit" class="btn danger"><%= action.t(:delete_all) %></button>
+    </form>
+  </div>
+<%- end %>
+
+<script nonce="<%= nonce %>">
+(function () {
+  var all = document.getElementById("select-all");
+  if (!all) return;
+  all.addEventListener("change", function () {
+    document.querySelectorAll("input.check[name='key[]']").forEach(function (c) { c.checked = all.checked; });
+  });
+})();
+</script>

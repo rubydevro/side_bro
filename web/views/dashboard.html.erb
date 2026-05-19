@@ -1,0 +1,119 @@
+<% @page_title = "Dashboard" %>
+<%= action.render_partial(:summary) %>
+<%
+  redis_info = begin
+    Sidekiq.redis { |c| c.info }
+  rescue
+    {}
+  end
+%>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow">
+      <span>Real-time</span>
+      <span class="pill" id="pollPill">5s POLL</span>
+    </div>
+    <h1>
+      <span class="queue-name">Dashboard</span>
+      <span class="badge-num" id="liveBadge" style="background:rgba(164,255,92,.12);border-color:rgba(164,255,92,.3);color:var(--lime)"><span class="mono">●</span> live</span>
+    </h1>
+  </div>
+  <div class="page-head-meta">
+    <div class="meta-item" style="min-width:240px">
+      <span class="meta-k">Polling interval</span>
+      <div style="display:flex; align-items:center; gap:10px; width:100%;">
+        <input type="range" id="pollSlider" min="1" max="30" value="5" class="poll-slider"/>
+        <span class="meta-v" style="min-width:46px;text-align:right;color:var(--violet-200)" id="pollValue">5 sec</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Realtime chart panel -->
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title">Throughput · last 60 seconds</div>
+    <div class="ph-meta"><span id="chartTime"></span></div>
+    <div class="ph-spacer"></div>
+    <div style="display:flex; align-items:center; gap:14px; font-size:12px; color:var(--text-dim);">
+      <span style="display:inline-flex; align-items:center; gap:6px"><span class="legend-dot" style="background:var(--cyan); box-shadow:0 0 6px var(--cyan)"></span>Processed</span>
+      <span style="display:inline-flex; align-items:center; gap:6px"><span class="legend-dot" style="background:var(--red); box-shadow:0 0 6px var(--red)"></span>Failed</span>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <svg id="liveChart" viewBox="0 0 800 280" preserveAspectRatio="none"></svg>
+    <div class="chart-tooltip" id="chartTip">
+      <div class="tip-time" id="tipTime"></div>
+      <div class="tip-row"><span class="legend-dot" style="background:var(--cyan)"></span>Processed: <b id="tipProc">0</b></div>
+      <div class="tip-row"><span class="legend-dot" style="background:var(--red)"></span>Failed: <b id="tipFail">0</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- History panel -->
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title">History</div>
+    <div class="ph-meta">Total processed over selected period</div>
+    <div class="ph-spacer"></div>
+    <div class="filter-group" id="historyTabs" style="gap:4px">
+      <button class="chip" data-range="week">1 week</button>
+      <button class="chip active" data-range="month">1 month</button>
+      <button class="chip" data-range="3m">3 months</button>
+      <button class="chip" data-range="6m">6 months</button>
+    </div>
+  </div>
+  <div class="chart-wrap" style="padding: 24px 28px 28px;">
+    <svg id="historyChart" viewBox="0 0 1200 320" preserveAspectRatio="none"></svg>
+  </div>
+</div>
+
+<!-- Redis panel -->
+<div class="panel">
+  <div class="panel-head">
+    <div class="ph-title">Redis</div>
+    <div class="ph-meta"><%= action.h(redis_info["redis_version"] ? "v#{redis_info["redis_version"]} · " : "") %>connected</div>
+    <div class="ph-spacer"></div>
+    <span class="ctx-pill" style="color:var(--lime); border-color:rgba(164,255,92,.3); background:rgba(164,255,92,.06)">
+      <span class="ctx-dot" style="background:var(--lime); box-shadow:0 0 6px var(--lime)"></span>healthy
+    </span>
+  </div>
+  <div class="redis-grid">
+    <div class="redis-card" data-tone="violet">
+      <div class="redis-num"><%= action.h(redis_info["redis_version"] || "—") %></div>
+      <div class="redis-label">Version</div>
+      <div class="redis-foot">stable channel</div>
+    </div>
+    <div class="redis-card" data-tone="cyan">
+      <div class="redis-num"><%= action.h(redis_info["uptime_in_days"] || "—") %></div>
+      <div class="redis-label">Uptime <small>(days)</small></div>
+      <div class="redis-foot">&nbsp;</div>
+    </div>
+    <div class="redis-card" data-tone="magenta">
+      <div class="redis-num"><%= action.h(redis_info["connected_clients"] || "—") %></div>
+      <div class="redis-label">Connections</div>
+      <div class="redis-foot">&nbsp;</div>
+    </div>
+    <div class="redis-card" data-tone="amber">
+      <div class="redis-num"><%= action.h(redis_info["used_memory_human"] || "—") %></div>
+      <div class="redis-label">Memory Usage</div>
+      <div class="redis-bar"><i style="width:30%; background:var(--amber)"></i></div>
+    </div>
+    <div class="redis-card" data-tone="red">
+      <div class="redis-num"><%= action.h(redis_info["used_memory_peak_human"] || "—") %></div>
+      <div class="redis-label">Peak Memory</div>
+      <div class="redis-foot">&nbsp;</div>
+    </div>
+  </div>
+</div>
+
+<script nonce="<%= nonce %>">
+window.HISTORY_DATA = {
+  processed: <%= @history.processed.values.reverse.to_json %>,
+  failed: <%= @history.failed.values.reverse.to_json %>,
+  labels: <%= @history.processed.keys.reverse.to_json %>
+};
+window.SIDE_BRO_ROOT = '<%= action.root_path %>';
+</script>
+<script src="<%= action.root_path %>assets/javascripts/dashboard.js" nonce="<%= nonce %>"></script>

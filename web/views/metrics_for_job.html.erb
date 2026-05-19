@@ -1,0 +1,67 @@
+<% @page_title = "Metrics: #{@name}" %>
+<% @breadcrumb = [{label: "Metrics", href: "#{action.root_path}metrics"}, {label: @name}] %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Monitoring</span></div>
+    <h1><span class="queue-name"><%= action.h(@name) %></span></h1>
+  </div>
+  <div class="page-head-meta">
+    <%= action.render_partial(:metrics_period_select) %>
+  </div>
+</div>
+
+<%- job_result = @metrics&.job_results&.[](@name) %>
+
+<%- if job_result.nil? || job_result.totals.empty? %>
+  <div class="panel">
+    <div class="empty"><%= action.t(:no_jobs) %></div>
+  </div>
+<%- else %>
+  <%- processed = job_result.totals["p"].to_i %>
+  <%- failures  = job_result.totals["f"].to_i %>
+  <%- success   = processed - failures %>
+  <%- total_s   = job_result.totals["s"].to_f %>
+  <%- completed = [success, 0].max %>
+  <%- avg_s     = completed > 0 ? total_s / completed : 0.0 %>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="ph-title">Summary</div>
+      <div class="ph-meta mono">Period: <%= @period %></div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th><%= action.t(:success) %></th>
+          <th><%= action.t(:failed) %></th>
+          <th><%= action.t(:total_exec_time) %></th>
+          <th><%= action.t(:avg_exec_time) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="color:var(--lime)"><%= success %></span></td>
+          <td><span style="color:var(--red)"><%= failures %></span></td>
+          <td><span class="mono" style="font-size:12px"><%= "%.2fs" % total_s %></span></td>
+          <td><span class="mono" style="font-size:12px"><%= "%.3fs" % avg_s %></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script nonce="<%= nonce %>">
+    window.JOB_METRICS = <%= {
+      name: @name,
+      period: @period,
+      processed: job_result.series["p"],
+      failed: job_result.series["f"],
+      avg_ms: job_result.series_avg("ms")
+    }.to_json %>;
+  </script>
+<%- end %>
+
+<a href="<%= action.root_path %>metrics" class="btn ghost" style="margin-top:8px;">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+  &larr; Back to Metrics
+</a>

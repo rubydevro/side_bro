@@ -1,0 +1,56 @@
+<% @page_title = "Metrics" %>
+
+<div class="page-head">
+  <div class="page-title-block">
+    <div class="eyebrow"><span>Monitoring</span></div>
+    <h1><%= action.t(:metrics) %></h1>
+  </div>
+  <div class="page-head-meta">
+    <%= action.render_partial(:metrics_period_select) %>
+  </div>
+</div>
+
+<%- if !action.metrics_enabled? %>
+  <div class="panel">
+    <div class="empty">Metrics require Sidekiq 7.0 or later.</div>
+  </div>
+<%- elsif @metrics.nil? || @metrics.job_results.empty? %>
+  <div class="panel">
+    <div class="empty"><%= action.t(:no_jobs) %></div>
+  </div>
+<%- else %>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="ph-title">Job Metrics</div>
+      <div class="ph-meta mono">Period: <%= @period %></div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th><%= action.t(:job_class) %></th>
+          <th><%= action.t(:success) %></th>
+          <th><%= action.t(:failed) %></th>
+          <th><%= action.t(:total_exec_time) %></th>
+          <th><%= action.t(:avg_exec_time) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%- @metrics.job_results.first(20).each do |klass, result| %>
+          <%- processed = result.totals["p"].to_i %>
+          <%- failures  = result.totals["f"].to_i %>
+          <%- success   = processed - failures %>
+          <%- total_s   = result.totals["s"].to_f %>
+          <%- completed = [success, 0].max %>
+          <%- avg_s     = completed > 0 ? total_s / completed : 0.0 %>
+          <tr>
+            <td><a href="<%= action.root_path %>metrics/<%= action.h(klass) %>"><span class="job-name"><%= action.h(klass) %></span></a></td>
+            <td><span style="color:var(--lime)"><%= success %></span></td>
+            <td><span style="color:var(--red)"><%= failures %></span></td>
+            <td><span class="mono" style="font-size:12px"><%= "%.2fs" % total_s %></span></td>
+            <td><span class="mono" style="font-size:12px"><%= "%.3fs" % avg_s %></span></td>
+          </tr>
+        <%- end %>
+      </tbody>
+    </table>
+  </div>
+<%- end %>
