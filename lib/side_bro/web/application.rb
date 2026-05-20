@@ -56,7 +56,7 @@ module SideBro
           response.body = [""]
           response.finish
         rescue => e
-          [500, {"Content-Type" => "text/plain"}, [e.message]]
+          throw :halt, [500, {"Content-Type" => "text/plain"}, [e.message]]
         end
 
         @router.get("/") do
