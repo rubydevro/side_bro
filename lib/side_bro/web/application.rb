@@ -121,10 +121,27 @@ module SideBro
           validate_queue_name!(params["name"])
           @queue = Sidekiq::Queue.new(params["name"])
           @page, @per_page = current_page
-          @total = @queue.size
-          @jobs = @queue.map { |j| j }.slice(@page * @per_page, @per_page) || []
           @asc = params["direction"] != "desc"
-          @jobs = @jobs.reverse unless @asc
+          @filter_job  = params["filter_job"].to_s.strip
+          @filter_args = params["filter_args"].to_s.strip
+          @filtering   = !@filter_job.empty? || !@filter_args.empty?
+
+          if @filtering
+            @jobs = @queue.lazy.select { |j|
+              (@filter_job.empty?  || job_display_class(j) == @filter_job) &&
+              (@filter_args.empty? || display_args(j) == @filter_args)
+            }.first(@per_page)
+            @total = nil
+          else
+            @total = @queue.size
+            if @asc
+              @jobs = @queue.lazy.drop(@page * @per_page).first(@per_page)
+            else
+              all = @queue.map { |j| j }
+              all.reverse!
+              @jobs = all.slice(@page * @per_page, @per_page) || []
+            end
+          end
           erb :queue
         end
 
@@ -141,11 +158,26 @@ module SideBro
           redirect "#{root_path}queues"
         end
 
+        @router.post("/queues/:name/delete_filtered") do
+          validate_queue_name!(params["name"])
+          filter_job  = params["filter_job"].to_s.strip
+          filter_args = params["filter_args"].to_s.strip
+          q = Sidekiq::Queue.new(params["name"])
+          to_delete = q.select { |j|
+            (filter_job.empty?  || job_display_class(j) == filter_job) &&
+            (filter_args.empty? || display_args(j) == filter_args)
+          }
+          to_delete.each(&:delete)
+          redirect "#{root_path}queues/#{params["name"]}"
+        end
+
         @router.post("/queues/:name/delete") do
           validate_queue_name!(params["name"])
           q = Sidekiq::Queue.new(params["name"])
-          job = q.find { |j| j.jid == params["key_val"] }
-          job&.delete
+          Array(params["key_val"]).each do |jid|
+            job = q.find { |j| j.jid == jid }
+            job&.delete
+          end
           redirect "#{root_path}queues/#{params["name"]}"
         end
 

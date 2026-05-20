@@ -1,10 +1,20 @@
 # frozen_string_literal: true
 
 require "json"
+require "cgi"
 
 module SideBro
   module WebHelpers
     QUEUE_NAME_RE = /\A[a-z_:.\-0-9]+\z/i
+
+    # Builds a query string from current request params merged with overrides.
+    # Pass nil as a value to remove that key from the result.
+    def query_string(overrides = {})
+      overrides = overrides.transform_keys(&:to_s)
+      base = request.params.reject { |k, _| overrides.key?(k.to_s) }
+      merged = base.merge(overrides.compact)
+      merged.map { |k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join("&")
+    end
 
     def validate_queue_name!(name)
       halt(404) unless name&.match?(QUEUE_NAME_RE)
@@ -46,9 +56,10 @@ module SideBro
       end
     end
 
-    def format_memory(mb)
-      return "–" unless mb
-      (mb >= 1024) ? "%.1f GB" % (mb / 1024.0) : "#{mb} MB"
+    def format_memory(kb)
+      return "–" unless kb
+      mb = kb / 1024.0
+      mb >= 1024 ? "%.1f GB" % (mb / 1024.0) : "%.0f MB" % mb
     end
 
     def truncate(str, len = 200)
@@ -64,14 +75,32 @@ module SideBro
       inner.is_a?(Hash) ? (inner["job_class"] || ACTIVEJOB_WRAPPER) : ACTIVEJOB_WRAPPER
     end
 
-    def display_args(job_hash)
-      raw = if job_hash["class"] == ACTIVEJOB_WRAPPER
+    def raw_args(job_hash)
+      if job_hash["class"] == ACTIVEJOB_WRAPPER
         inner = (job_hash["args"] || []).first
         inner.is_a?(Hash) ? clean_aj_args(inner["arguments"] || []) : []
       else
         job_hash["args"] || []
       end
-      truncate(JSON.generate(raw))
+    end
+
+    def display_args(job_hash)
+      truncate(JSON.generate(raw_args(job_hash)))
+    rescue
+      "–"
+    end
+
+    def format_args_short(job_hash, per_row: 2)
+      raw = raw_args(job_hash)
+      if raw.length == 1 && raw.first.is_a?(Hash)
+        pairs = raw.first.map { |k, v|
+          val = v.is_a?(String) ? v : JSON.generate(v)
+          "#{k}: #{truncate(val, 20)}"
+        }
+        pairs.each_slice(per_row).map { |s| s.join("   ") }.join("\n")
+      else
+        truncate(JSON.generate(raw), 60)
+      end
     rescue
       "–"
     end

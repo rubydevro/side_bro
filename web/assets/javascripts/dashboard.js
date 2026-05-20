@@ -42,12 +42,14 @@
   var N = 60;
   var seriesProcessed = new Array(N).fill(0);
   var seriesFailed = new Array(N).fill(0);
+  var prevProcessed = null;
+  var prevFailed = null;
 
   // ---- live chart ----
   function renderLiveChart() {
     var svg = document.getElementById("liveChart");
     if (!svg) return;
-    var W = 800, H = 280, PAD_L = 44, PAD_R = 16, PAD_T = 18, PAD_B = 28;
+    var W = 1200, H = 280, PAD_L = 54, PAD_R = 20, PAD_T = 18, PAD_B = 28;
     var cw = W - PAD_L - PAD_R, ch = H - PAD_T - PAD_B;
     var all = seriesProcessed.concat(seriesFailed);
     var maxY = Math.max(12, Math.ceil(Math.max.apply(null, all)));
@@ -71,13 +73,13 @@
       var yy = PAD_T + (i / 4) * ch;
       var val = Math.round(maxY - (i / 4) * maxY);
       grid += "<line x1=\"" + PAD_L + "\" y1=\"" + yy + "\" x2=\"" + (W - PAD_R) + "\" y2=\"" + yy + "\" stroke=\"#1f1638\" stroke-dasharray=\"3 4\"/>";
-      grid += "<text x=\"" + (PAD_L - 8) + "\" y=\"" + (yy + 4) + "\" font-size=\"10\" fill=\"#6a5f8a\" text-anchor=\"end\" font-family=\"JetBrains Mono\">" + val + "</text>";
+      grid += "<text x=\"" + (PAD_L - 8) + "\" y=\"" + (yy + 4) + "\" font-size=\"11\" fill=\"#6a5f8a\" text-anchor=\"end\" font-family=\"JetBrains Mono\">" + val + "</text>";
     }
     var xLabels = "";
     for (var j = 0; j <= 4; j++) {
       var xx = PAD_L + (j / 4) * cw;
       var sec = 60 - Math.round((j / 4) * 60);
-      xLabels += "<text x=\"" + xx + "\" y=\"" + (H - 8) + "\" font-size=\"10\" fill=\"#6a5f8a\" text-anchor=\"middle\" font-family=\"JetBrains Mono\">" + (sec === 0 ? "now" : "-" + sec + "s") + "</text>";
+      xLabels += "<text x=\"" + xx + "\" y=\"" + (H - 8) + "\" font-size=\"11\" fill=\"#6a5f8a\" text-anchor=\"middle\" font-family=\"JetBrains Mono\">" + (sec === 0 ? "now" : "-" + sec + "s") + "</text>";
     }
 
     svg.innerHTML =
@@ -109,6 +111,12 @@
       tip.style.top = (e.clientY - rect.top + 12) + "px";
     };
     svg.onmouseleave = function () { tip.style.display = "none"; };
+  }
+
+  function formatVal(v) {
+    if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (v >= 1000) return Math.round(v / 1000) + "K";
+    return String(v);
   }
 
   // ---- history chart ----
@@ -160,9 +168,9 @@
     var grid = "";
     for (var i = 0; i <= 4; i++) {
       var yy = PAD_T + (i / 4) * ch;
-      var val = Math.round((maxY - (i / 4) * maxY) / 100) * 100;
+      var val = Math.round(maxY - (i / 4) * maxY);
       grid += "<line x1=\"" + PAD_L + "\" y1=\"" + yy + "\" x2=\"" + (W - PAD_R) + "\" y2=\"" + yy + "\" stroke=\"#1f1638\" stroke-dasharray=\"2 4\"/>";
-      if (i > 0) grid += "<text x=\"" + (PAD_L - 10) + "\" y=\"" + (yy + 4) + "\" font-size=\"11\" fill=\"#6a5f8a\" text-anchor=\"end\" font-family=\"JetBrains Mono\">" + val + "K</text>";
+      if (i > 0) grid += "<text x=\"" + (PAD_L - 10) + "\" y=\"" + (yy + 4) + "\" font-size=\"11\" fill=\"#6a5f8a\" text-anchor=\"end\" font-family=\"JetBrains Mono\">" + formatVal(val) + "</text>";
     }
 
     // label thinning
@@ -209,8 +217,14 @@
     fetch(root + "stats")
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        seriesProcessed.shift(); seriesProcessed.push(Math.max(0, data.processed || 0));
-        seriesFailed.shift(); seriesFailed.push(Math.max(0, data.failed || 0));
+        var proc = data.processed || 0;
+        var fail = data.failed || 0;
+        var deltaProc = prevProcessed === null ? 0 : Math.max(0, proc - prevProcessed);
+        var deltaFail = prevFailed === null ? 0 : Math.max(0, fail - prevFailed);
+        prevProcessed = proc;
+        prevFailed = fail;
+        seriesProcessed.shift(); seriesProcessed.push(deltaProc);
+        seriesFailed.shift(); seriesFailed.push(deltaFail);
         renderLiveChart();
       })
       .catch(function () {

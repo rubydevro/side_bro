@@ -29,9 +29,9 @@
 
   <div class="divider-v"></div>
 
-  <a href="?direction=<%= @asc ? 'desc' : 'asc' %>&page=1" class="chip">
+  <a href="?<%= action.query_string("direction" => (@asc ? "desc" : "asc"), "page" => "1") %>" class="chip">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    <%= @asc ? "Oldest first" : "Newest first" %>
+    <%= @asc ? "Newest first" : "Oldest first" %>
   </a>
 
   <div style="margin-left:auto; display:flex; gap:8px;">
@@ -53,6 +53,29 @@
   </div>
 </div>
 
+<%- if @filtering %>
+<div class="active-filters">
+  <span>Filtering by</span>
+  <span class="filter-tag">
+    <%- if @filter_args.empty? %>
+      <span><%= action.h(@filter_job) %></span>
+    <%- else %>
+      <span><%= action.h(@filter_job) %> &nbsp;·&nbsp; <%= action.h(@filter_args.length > 60 ? @filter_args[0, 60] + "…" : @filter_args) %></span>
+    <%- end %>
+    <a href="?<%= action.query_string("filter_job" => nil, "filter_args" => nil, "page" => "1") %>" class="x" title="Clear filter">✕</a>
+  </span>
+  <form method="post" action="<%= action.root_path %>queues/<%= action.h(@queue.name) %>/delete_filtered" style="display:inline">
+    <input type="hidden" name="filter_job"  value="<%= action.h(@filter_job) %>">
+    <input type="hidden" name="filter_args" value="<%= action.h(@filter_args) %>">
+    <button type="submit" class="btn danger" style="padding:4px 10px;font-size:12px"
+      onclick="return confirm('Delete all <%= @total %> filtered job<%= @total == 1 ? "" : "s" %>?')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Delete filtered
+    </button>
+  </form>
+</div>
+<%- end %>
+
 <%- if @jobs.empty? %>
   <div class="panel">
     <div class="empty"><%= action.t(:no_jobs) %></div>
@@ -61,7 +84,13 @@
   <div class="panel">
     <div class="panel-head">
       <div class="ph-title">Jobs</div>
-      <div class="ph-meta"><%= @total %> total · sorted <%= @asc ? "oldest first" : "newest first" %></div>
+      <div class="ph-meta">
+        <%- if @filtering %>
+          first <%= @jobs.size %> matches · newest first
+        <%- else %>
+          <%= @total %> total · sorted <%= @asc ? "newest first" : "oldest first" %>
+        <%- end %>
+      </div>
       <div class="ph-spacer"></div>
     </div>
 
@@ -100,14 +129,16 @@
               <td class="col-num"><%= @page * @per_page + i + 1 %></td>
               <td>
                 <div class="job-cell">
-                  <span class="job-name"><%= action.h(action.job_display_class(job)) %></span>
+                  <a href="?<%= action.query_string("filter_job" => action.job_display_class(job), "filter_args" => nil, "page" => "1") %>" class="job-name" title="Filter by this job class"><%= action.h(action.job_display_class(job)) %></a>
                   <span class="job-meta">
                     <span class="tag">JID <span class="mono"><%= action.h(job.jid.to_s) %></span></span>
                   </span>
                 </div>
               </td>
               <td>
-                <code class="args"><%= action.h(action.truncate(action.display_args(job), 100)) %></code>
+                <a href="?<%= action.query_string("filter_job" => action.job_display_class(job), "filter_args" => action.display_args(job), "page" => "1") %>" class="args-link" title="Filter by class + arguments">
+                  <code class="args" style="white-space:pre-line;font-size:11px"><%= action.h(action.format_args_short(job)) %></code>
+                </a>
               </td>
               <td><span class="mono" style="color:var(--text-dim);font-size:12px"><%= job["enqueued_at"] ? Time.at(job["enqueued_at"]).utc.strftime("%Y-%m-%d %H:%M:%S") : "—" %></span></td>
               <td class="col-actions">
@@ -127,7 +158,13 @@
     </div>
 
     <div class="panel-foot">
-      <%= action.render_partial(:paging) %>
+      <%- if @filtering %>
+        <div class="paging" style="color:var(--text-faint);font-size:12px;justify-content:center">
+          Showing first <%= @per_page %> matches — filtered results are not paginated
+        </div>
+      <%- else %>
+        <%= action.render_partial(:paging) %>
+      <%- end %>
     </div>
   </div>
 <%- end %>
@@ -139,8 +176,7 @@
   if (!input || !table) return;
   input.addEventListener("input", function () {
     var q = input.value.toLowerCase();
-    var rows = table.querySelectorAll("tbody tr");
-    rows.forEach(function (row) {
+    table.querySelectorAll("tbody tr").forEach(function (row) {
       row.style.display = q === "" || row.textContent.toLowerCase().includes(q) ? "" : "none";
     });
   });

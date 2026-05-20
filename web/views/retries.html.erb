@@ -33,6 +33,15 @@
         </div>
       </div>
       <table>
+        <colgroup>
+          <col style="width:32px"/>
+          <col style="width:72px"/>
+          <col style="width:52px"/>
+          <col style="width:110px"/>
+          <col style="width:170px"/>
+          <col style="width:200px"/>
+          <col style="width:auto"/>
+        </colgroup>
         <thead>
           <tr>
             <th class="col-select"><input type="checkbox" class="check" id="select-all"></th>
@@ -50,10 +59,10 @@
               <td class="col-select"><input type="checkbox" class="check" name="key[]" value="<%= action.h(job.jid) %>"></td>
               <td><span class="mono" style="font-size:12px"><%= job["retry_at"] ? action.relative_time(Time.at(job["retry_at"])) : "—" %></span></td>
               <td><span class="mono" style="font-size:12px"><%= job["retry_count"] || 0 %></span></td>
-              <td><%= action.h(job["queue"]) %></td>
+              <td><span style="font-size:12px"><%= action.h(job["queue"]) %></span></td>
               <td><a href="<%= action.root_path %>retries/<%= action.h(job.jid) %>"><span class="job-name"><%= action.h(action.job_display_class(job)) %></span></a></td>
-              <td><code class="args"><%= action.h(action.truncate(action.display_args(job), 100)) %></code></td>
-              <td style="color:var(--red); font-size:12px"><%= action.h(action.truncate("#{job["error_class"]}: #{job["error_message"]}", 120)) %></td>
+              <td><code class="args" style="white-space:pre-line;font-size:11px;max-width:200px"><%= action.h(action.format_args_short(job)) %></code></td>
+              <td style="color:var(--red);font-size:11.5px"><%= action.h(action.truncate("#{job["error_class"]}: #{job["error_message"]}", 120)) %></td>
             </tr>
           <%- end %>
         </tbody>
