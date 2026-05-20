@@ -407,8 +407,18 @@ thead th {
   text-transform: uppercase; color: var(--text-faint);
   padding: 10px 16px;
   background: var(--bg-1);
+  position: sticky; top: 0; z-index: 1;
 }
-.table-scroll { max-height: 640px; overflow: auto; }
+.table-scroll {
+  max-height: calc(100vh - 300px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--violet-500) transparent;
+}
+.table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-scroll::-webkit-scrollbar-track { background: transparent; }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--violet-500); border-radius: 3px; }
+.table-scroll::-webkit-scrollbar-thumb:hover { background: var(--violet-400); }
 .table-head-wrap {
   background: var(--bg-1);
   border-bottom: 1px solid var(--line-soft);

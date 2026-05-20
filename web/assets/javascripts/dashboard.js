@@ -51,6 +51,10 @@
     if (!svg) return;
     var W = 1200, H = 280, PAD_L = 54, PAD_R = 20, PAD_T = 18, PAD_B = 28;
     var cw = W - PAD_L - PAD_R, ch = H - PAD_T - PAD_B;
+    var interval = getInterval();
+    var totalSec = (N - 1) * interval;
+    var chartWindow = document.getElementById("chartWindow");
+    if (chartWindow) chartWindow.textContent = totalSec >= 60 ? Math.round(totalSec / 60) + " min" : totalSec + "s";
     var all = seriesProcessed.concat(seriesFailed);
     var maxY = Math.max(12, Math.ceil(Math.max.apply(null, all)));
     var x = function (i) { return PAD_L + (i / (N - 1)) * cw; };
@@ -78,7 +82,7 @@
     var xLabels = "";
     for (var j = 0; j <= 4; j++) {
       var xx = PAD_L + (j / 4) * cw;
-      var sec = 60 - Math.round((j / 4) * 60);
+      var sec = Math.round(((4 - j) / 4) * totalSec);
       xLabels += "<text x=\"" + xx + "\" y=\"" + (H - 8) + "\" font-size=\"11\" fill=\"#6a5f8a\" text-anchor=\"middle\" font-family=\"JetBrains Mono\">" + (sec === 0 ? "now" : "-" + sec + "s") + "</text>";
     }
 
@@ -105,9 +109,13 @@
       var idx = Math.max(0, Math.min(N - 1, Math.round(((px - PAD_L) / cw) * (N - 1))));
       document.getElementById("tipProc").textContent = seriesProcessed[idx].toFixed(1);
       document.getElementById("tipFail").textContent = seriesFailed[idx].toFixed(1);
-      document.getElementById("tipTime").textContent = (60 - idx) + "s ago";
+      var ageSec = (N - 1 - idx) * getInterval();
+      document.getElementById("tipTime").textContent = ageSec === 0 ? "now" : ageSec + "s ago";
       tip.style.display = "block";
-      tip.style.left = (e.clientX - rect.left + 12) + "px";
+      var cursorX = e.clientX - rect.left;
+      var tipW = tip.offsetWidth;
+      var tipX = cursorX + tipW + 24 > rect.width ? cursorX - tipW - 12 : cursorX + 12;
+      tip.style.left = tipX + "px";
       tip.style.top = (e.clientY - rect.top + 12) + "px";
     };
     svg.onmouseleave = function () { tip.style.display = "none"; };
