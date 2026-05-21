@@ -5,17 +5,17 @@ require_relative "lib/side_bro/version"
 Gem::Specification.new do |spec|
   spec.name = "side_bro"
   spec.version = SideBro::VERSION
-  spec.authors = ["Cremz"]
-  spec.email = ["cremzinc@gmail.com"]
+  spec.authors = ["Ruby Dev SRL"]
+  spec.email = ["office@rubydev.ro"]
 
   spec.summary = "A Rack-mountable Sidekiq Web UI alternative"
   spec.description = "SideBro is a Rack-mountable alternative to Sidekiq's built-in Web UI, providing the same features with a customizable design."
-  spec.homepage = "https://github.com/cremzinc/side_bro"
+  spec.homepage = "https://www.rubydev.ro"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/rubydevro/side_bro"
+  spec.metadata["changelog_uri"] = "https://github.com/rubydevro/side_bro/blob/master/CHANGELOG.md"
 
   # Uncomment the line below to require MFA for gem pushes.
   # This helps protect your gem from supply chain attacks by ensuring
