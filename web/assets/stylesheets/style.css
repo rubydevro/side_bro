@@ -408,6 +408,7 @@ thead th {
   padding: 10px 16px;
   background: var(--bg-1);
   position: sticky; top: 0; z-index: 1;
+  overflow: hidden; white-space: nowrap;
 }
 .table-scroll {
   max-height: calc(100vh - 300px);
@@ -431,6 +432,7 @@ tbody td {
   border-bottom: 1px solid var(--line-soft);
   color: var(--text);
   vertical-align: middle;
+  overflow: hidden;
 }
 tbody tr { transition: background .12s; cursor: pointer; }
 tbody tr:hover { background: rgba(122,61,255,.06); }
@@ -452,9 +454,16 @@ tbody tr:last-child td { border-bottom: 0; }
   transform: rotate(-45deg) translate(0, -1px);
 }
 
-.col-select { width: 36px; padding-right: 0 !important;}
-.col-num    { width: 56px; font-family: 'JetBrains Mono', monospace; color: var(--text-faint); }
-.col-actions{ width: 90px; text-align: right; }
+.col-select  { width: 36px; padding-right: 0 !important; }
+.col-num     { width: 56px; font-family: 'JetBrains Mono', monospace; color: var(--text-faint); }
+.col-actions { width: 90px; text-align: right; }
+/* col-compact: reduced side padding for narrow data cells */
+.col-compact { padding-left: 8px !important; padding-right: 8px !important; }
+/* width classes for col elements — col only supports border/background/width/visibility */
+col.w-xs  { width: 40px; }
+col.w-sm  { width: 60px; }
+col.w-md  { width: 80px; }
+col.w-lg  { width: 140px; }
 
 .job-cell { display: flex; flex-direction: column; gap: 4px; }
 .job-name {
@@ -618,3 +627,10 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--t
 .redis-bar { height: 4px; border-radius: 2px; background: var(--bg-0); margin-top: 8px; overflow: hidden; }
 .redis-bar i { display: block; height: 100%; border-radius: 2px; }
 @media (max-width: 1100px){ .redis-grid { grid-template-columns: repeat(2, 1fr);} }
+
+/* ---------- Flash messages ---------- */
+.flash-bar { display: flex; flex-direction: column; gap: 6px; margin: 0 0 16px; }
+.flash { padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+  border: 1px solid; display: flex; align-items: center; gap: 8px; }
+.flash-notice { background: rgba(75,227,255,.08); border-color: rgba(75,227,255,.3); color: var(--cyan); }
+.flash-error  { background: rgba(255,84,112,.08); border-color: rgba(255,84,112,.3); color: var(--red); }

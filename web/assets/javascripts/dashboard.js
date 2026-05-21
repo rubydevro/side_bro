@@ -16,27 +16,23 @@
     pollSlider.addEventListener("input", function (e) {
       var v = parseInt(e.target.value, 10);
       if (pollValue) pollValue.textContent = v + " sec";
-      if (liveInterval) liveInterval.textContent = v + "s";
-      if (pollPill) pollPill.textContent = v + "s POLL";
+      if (window.SideBroLive) window.SideBroLive.setInterval(v);
+      liveInterval = document.getElementById("liveInterval");
       restartTimer();
     });
   }
 
-  if (liveToggle) {
-    liveToggle.addEventListener("click", function (e) {
-      e.currentTarget.classList.toggle("off");
-      isLive = !e.currentTarget.classList.contains("off");
-      var span = e.currentTarget.querySelector("span:last-child");
+  // application.js owns the toggle button; we hook in via SideBroLive.onToggle
+  if (window.SideBroLive) {
+    window.SideBroLive.onToggle = function (live) {
+      isLive = live;
       if (!isLive) {
-        span.innerHTML = "Paused";
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       } else {
-        var v = getInterval();
-        span.innerHTML = "Live · <span class=\"mono\" id=\"liveInterval\">" + v + "s</span>";
         liveInterval = document.getElementById("liveInterval");
         restartTimer();
       }
-    });
+    };
   }
 
   var N = 60;

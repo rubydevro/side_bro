@@ -9,6 +9,7 @@ module SideBro
       include SideBro::WebHelpers
 
       VIEWS_PATH = File.expand_path("../../../web/views", __dir__)
+      TEMPLATE_CACHE = {}
 
       attr_reader :env, :request, :response, :nonce
 
@@ -61,6 +62,13 @@ module SideBro
       def erb(template_name)
         @nonce = SecureRandom.base64(16)
         env["side_bro.csp_nonce"] = @nonce
+        response["Content-Security-Policy"] =
+          "default-src 'self'; " \
+          "script-src 'nonce-#{@nonce}'; " \
+          "style-src 'nonce-#{@nonce}' https://fonts.googleapis.com; " \
+          "font-src 'self' https://fonts.gstatic.com; " \
+          "img-src 'self' data:; " \
+          "connect-src 'self'"
         layout = load_template(:layout)
         content = render_template(template_name)
         response.body = [layout.result_with_hash(content: content, nonce: @nonce, action: self)]
@@ -78,8 +86,9 @@ module SideBro
       end
 
       def load_template(name)
-        path = File.join(VIEWS_PATH, "#{name}.html.erb")
-        ERB.new(File.read(path), trim_mode: "-")
+        tpl = ERB.new(File.read(File.join(VIEWS_PATH, "#{name}.html.erb")), trim_mode: "-")
+        return tpl unless ENV["RACK_ENV"] == "production"
+        TEMPLATE_CACHE[name] ||= tpl
       end
     end
 

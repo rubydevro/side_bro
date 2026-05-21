@@ -95,10 +95,15 @@
       <div class="redis-label">Connections</div>
       <div class="redis-foot">&nbsp;</div>
     </div>
+    <%
+      _used_bytes = redis_info["used_memory"].to_i
+      _peak_bytes = redis_info["used_memory_peak"].to_i
+      _mem_pct    = (_peak_bytes > 0 ? [(_used_bytes * 100.0 / _peak_bytes).round, 100].min : 0)
+    %>
     <div class="redis-card" data-tone="amber">
       <div class="redis-num"><%= action.h(redis_info["used_memory_human"] || "—") %></div>
       <div class="redis-label">Memory Usage</div>
-      <div class="redis-bar"><i style="width:30%; background:var(--amber)"></i></div>
+      <div class="redis-bar"><i style="width:<%= _mem_pct %>%; background:var(--amber)"></i></div>
     </div>
     <div class="redis-card" data-tone="red">
       <div class="redis-num"><%= action.h(redis_info["used_memory_peak_human"] || "—") %></div>

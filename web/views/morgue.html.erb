@@ -48,7 +48,7 @@
               <td><span class="mono" style="font-size:12px"><%= job["failed_at"] ? action.relative_time(Time.at(job["failed_at"])) : "—" %></span></td>
               <td><%= action.h(job["queue"]) %></td>
               <td><a href="<%= action.root_path %>morgue/<%= action.h(job.jid) %>"><span class="job-name"><%= action.h(action.job_display_class(job)) %></span></a></td>
-              <td><code class="args" style="white-space:pre-line;font-size:11px"><%= action.h(action.format_args_short(job)) %></code></td>
+              <td><code class="args" style="font-size:11px"><%= action.h(action.format_args_short(job)) %></code></td>
               <td style="color:var(--red); font-size:12px"><%= action.h(action.truncate("#{job["error_class"]}: #{job["error_message"]}", 120)) %></td>
             </tr>
           <%- end %>

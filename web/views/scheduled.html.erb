@@ -46,7 +46,7 @@
               </td>
               <td><%= action.h(job["queue"]) %></td>
               <td><a href="<%= action.root_path %>scheduled/<%= action.h(job.jid) %>"><span class="job-name"><%= action.h(action.job_display_class(job)) %></span></a></td>
-              <td><code class="args" style="white-space:pre-line;font-size:11px"><%= action.h(action.format_args_short(job)) %></code></td>
+              <td><code class="args" style="font-size:11px"><%= action.h(action.format_args_short(job)) %></code></td>
             </tr>
           <%- end %>
         </tbody>

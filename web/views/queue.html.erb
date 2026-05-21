@@ -137,7 +137,7 @@
               </td>
               <td>
                 <a href="?<%= action.query_string("filter_job" => action.job_display_class(job), "filter_args" => action.display_args(job), "page" => "1") %>" class="args-link" title="Filter by class + arguments">
-                  <code class="args" style="white-space:pre-line;font-size:11px"><%= action.h(action.format_args_short(job)) %></code>
+                  <code class="args" style="font-size:11px"><%= action.h(action.format_args_short(job)) %></code>
                 </a>
               </td>
               <td><span class="mono" style="color:var(--text-dim);font-size:12px"><%= job["enqueued_at"] ? Time.at(job["enqueued_at"]).utc.strftime("%Y-%m-%d %H:%M:%S") : "—" %></span></td>

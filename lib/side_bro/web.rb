@@ -63,6 +63,15 @@ module SideBro
       private
 
       def build
+        unless ENV.key?("SIDE_BRO_SESSION_SECRET")
+          warn "[SideBro] SIDE_BRO_SESSION_SECRET is not set — sessions will reset on every server restart."
+        end
+
+        SideBro::Web.extensions.each do |ext|
+          next unless ext[:root_dir]
+          Dir["#{ext[:root_dir]}/locales/*.yml"].each { |f| SideBro::Web.load_locale(f) }
+        end
+
         middlewares = @middlewares.dup
         Rack::Builder.new do
           use Rack::Session::Cookie,

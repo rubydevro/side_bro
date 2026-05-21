@@ -34,11 +34,21 @@
           <span class="pulse"></span>
           <span>Live · <span class="mono" id="liveInterval">5s</span></span>
         </button>
-        <button class="icon-btn" title="Refresh" onclick="window.location.reload()">
+        <button class="icon-btn" title="Refresh" id="refreshBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
       </div>
     </div>
+
+    <%- if action.flash.any? %>
+      <div class="flash-bar">
+        <%- %w[notice error].each do |_level| %>
+          <%- if (msg = action.flash[_level]) %>
+            <div class="flash flash-<%= _level %>"><%= action.h(msg) %></div>
+          <%- end %>
+        <%- end %>
+      </div>
+    <%- end %>
 
     <%= content %>
 
@@ -47,12 +57,5 @@
 
 </div>
 <script src="<%= action.root_path %>assets/javascripts/application.js" nonce="<%= nonce %>"></script>
-<script nonce="<%= nonce %>">
-document.getElementById('liveToggle').addEventListener('click', function(e) {
-  e.currentTarget.classList.toggle('off');
-  var isOff = e.currentTarget.classList.contains('off');
-  e.currentTarget.querySelector('span:last-child').innerHTML = isOff ? 'Paused' : 'Live · <span class="mono" id="liveInterval">5s</span>';
-});
-</script>
 </body>
 </html>

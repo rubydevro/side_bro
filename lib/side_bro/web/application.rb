@@ -10,6 +10,7 @@ module SideBro
       def initialize
         @router = SideBro::Web::Router.new
         register_routes
+        register_extension_routes
       end
 
       def call(env)
@@ -128,8 +129,8 @@ module SideBro
 
           if @filtering
             @jobs = @queue.lazy.select { |j|
-              (@filter_job.empty?  || job_display_class(j) == @filter_job) &&
-              (@filter_args.empty? || display_args(j) == @filter_args)
+              (@filter_job.empty?  || job_display_class(j).include?(@filter_job)) &&
+              (@filter_args.empty? || display_args(j).include?(@filter_args))
             }.first(@per_page)
             @total = nil
           else
@@ -287,6 +288,42 @@ module SideBro
           new_locale = params["locale"].to_s.strip
           session[:locale] = new_locale if SideBro::Web.translations.key?(new_locale)
           redirect(request.env["HTTP_REFERER"] || root_path.to_s)
+        end
+      end
+
+      def register_extension_routes
+        SideBro::Web.extensions.each do |ext|
+          ext_name = ext[:name]
+          ext_class = ext[:class]
+          root_dir = ext[:root_dir]
+          cache_for = ext[:cache_for] || 86400
+
+          if root_dir
+            assets_base = File.expand_path("assets", root_dir)
+            @router.get("/#{ext_name}/assets/*") do
+              asset_path = File.expand_path(File.join(assets_base, params["splat"].to_s))
+              unless asset_path.start_with?(assets_base) && File.file?(asset_path)
+                halt(404)
+              end
+              content_type = case File.extname(asset_path)
+              when ".css" then "text/css"
+              when ".js" then "application/javascript"
+              when ".png" then "image/png"
+              when ".svg" then "image/svg+xml"
+              else "application/octet-stream"
+              end
+              response["Content-Type"] = content_type
+              response["Cache-Control"] = "private, max-age=#{cache_for}"
+              response.body = [File.binread(asset_path)]
+              response.finish
+            end
+          end
+
+          next unless ext_class.respond_to?(:call)
+          ["/#{ext_name}", "/#{ext_name}/*"].each do |path|
+            @router.get(path) { throw :halt, ext_class.call(env) }
+            @router.post(path) { throw :halt, ext_class.call(env) }
+          end
         end
       end
     end
