@@ -48,3 +48,7 @@ end
 ## Session Secret
 
 Set `SIDE_BRO_SESSION_SECRET` env var for a stable session secret across restarts.
+
+---
+
+**Maintained by [Ruby Dev](https://www.rubydev.ro)** — works great with **[Dead Bro](https://www.deadbro.com)**, APM for Rails apps.
